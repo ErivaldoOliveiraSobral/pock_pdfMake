@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html ng-app="app">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.4/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.22/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <script src="js/ui-bootstrap-tpls-0.3.0.min.js"></script>
+
+
+    <link rel="stylesheet" href="css/bootstrap-combined.min.css">
+    <link rel="stylesheet" href="css/estiloPersonalizado.css">
+    <link rel="stylesheet" href="css/fontawesome/fontawesome-all.min.css">
+
+    <title>Document</title>
+</head>
+
+<body ng-controller="mainController">
+
+    <table border=1 id="exportthis">
+        <thead>
+            <tr>
+                <th>ITEM CODE</th>
+                <th>ITEM NAME</th>
+                <th>ITEM DESCRIPTION</th>
+                <th>UNIT OF MEASURE</th>
+                <th>AVAILABLE</th>
+                <th>OPEN STOCK</th>
+                <th>RESTRICT STOCK</th>
+                <th>THRESHOLD</th>
+                <th>ACTIVE</th>
+                <th>EXCLUDE</th>
+            </tr>
+        </thead>
+        <tr ng-repeat="item in filteredItems">
+            <td> {{item.itemCode}} </td>
+            <td> {{item.itemName}} </td>
+            <td> {{item.itemDescription}} </td>
+            <td> {{item.uom}} </td>
+            <td> {{item.available}} </td>
+            <td> {{item.openStock}} </td>
+            <td> {{item.restrictStock}} </td>
+            <td> {{item.threshold}} </td>
+            <td> {{item.active}} </td>
+            <td class="garbage" ng-click="excluir(item)"><i class="fas fa-trash-alt"></i></td>
+        </tr>
+    </table>
+    <input style="margin: 5px;" class="btn btn-primary" type="button" value="Export" ng-click="export()">
+    <div data-pagination="" data-num-pages="numOfPages()" data-current-page="curPage" data-max-size="maxSize"
+        data-boundary-links="true">
+    </div>
+
+    <script>
+        var app = angular.module("app", ['ui.bootstrap']);
+
+        app.controller("mainController", function ($scope) {
+
+            $scope.export = function () {
+                html2canvas(document.getElementById('exportthis'), {
+                    onrendered: function (canvas) {
+                        var data = canvas.toDataURL();
+                        var docDefinition = {
+                            content: [{
+                                image: data,
+                                width: 500,
+                            }]
+                        };
+                        pdfMake.createPdf(docDefinition).download("test.pdf");
+                    }
+                });
+            };
+
+            $scope.curPage = 1;
+            $scope.itemsPerPage = 60;
+            $scope.maxSize = 5;
+
+            this.items = itemsDetails;
+
+            $scope.numOfPages = function () {
+                return Math.ceil(itemsDetails.length / $scope.itemsPerPage);
+            };
+
+            $scope.$watch('curPage + numPerPage', function () {
+                var begin = (($scope.curPage - 1) * $scope.itemsPerPage);
+                var end = begin + $scope.itemsPerPage;
+                $scope.filteredItems = itemsDetails.slice(begin, end);
+            });
+            $scope.excluir = function (item) {
+                var i = 0;
+                for (i; i < itemsDetails.length; i++) {
+                    if (itemsDetails[i].itemCode == item.itemCode) {
+                        itemsDetails.splice(i, 1);
+                    }
+                }
+                var begin = (($scope.curPage - 1) * $scope.itemsPerPage);
+                var end = begin + $scope.itemsPerPage;
+                $scope.filteredItems = itemsDetails.slice(begin, end);
+            };
+        });
+    </script>
+    <script src="js/mock-data.js"></script>
+</body>
+
+</html>
